@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Pelajar DITN4</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; }
+        .header { text-align: center; color: #1e3a8a; margin-bottom: 30px; }
+        .container { max-width: 1000px; margin: auto; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 280px; }
+        h2 { color: #1e3a8a; margin-top: 0; font-size: 1.2rem; }
+        input { width: 100%; padding: 10px; margin: 8px 0 16px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #2563eb; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #1d4ed8; }
+        .result-box { margin-top: 15px; padding: 15px; background: #e0f2fe; border-left: 4px solid #0284c7; border-radius: 4px; display: flex; gap: 15px; align-items: center; }
+        .profile-img { width: 100px; height: 120px; object-fit: cover; border-radius: 6px; border: 2px solid #0284c7; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>PORTAL PELAJAR DITN4</h1>
+        <p>Politeknik Ungku Omar</p>
+    </div>
+
+    <div class="container">
+        <!-- CARIAN NOMBOR MATRIK -->
+        <div class="card">
+            <h2>Carian Profil Pelajar</h2>
+            <label>Nombor Matrik:</label>
+            <input type="text" id="searchMatrix" placeholder="Contoh: 01DIT24F2042">
+            <button onclick="searchStudent()">Cari Profil</button>
+            <div id="searchResult"></div>
+        </div>
+
+        <!-- LOG MASUK EMAIL -->
+        <div class="card">
+            <h2>Log Masuk Pelajar</h2>
+            <label>Email Pelajar:</label>
+            <input type="email" id="loginEmail" placeholder="Contoh: adlifiras2006@gmail.com">
+            <label>Kata Laluan:</label>
+            <input type="password" id="loginPassword" placeholder="Kata laluan">
+            <button onclick="loginStudent()">Log Masuk</button>
+            <div id="loginResult"></div>
+        </div>
+
+        <!-- KAD TUKAR KATA LALUAN -->
+        <div class="card">
+            <h2>Tukar Kata Laluan</h2>
+            <label>Email Pelajar:</label>
+            <input type="email" id="updateEmail" placeholder="Contoh: adlifiras2006@gmail.com">
+            <label>Kata Laluan Semasa:</label>
+            <input type="password" id="oldPassword" placeholder="Kata laluan lama">
+            <label>Kata Laluan Baru:</label>
+            <input type="password" id="newPassword" placeholder="Kata laluan baru">
+            <button onclick="changePassword()" style="background-color: #059669;">Kemas Kini Kata Laluan</button>
+            <div id="updateResult"></div>
+        </div>
+    </div>
+
+    <script>
+        // 1. CARIAN PROFIL
+        async function searchStudent() {
+            const matrix = document.getElementById('searchMatrix').value.trim();
+            const resultDiv = document.getElementById('searchResult');
+            if(!matrix) return alert('Sila masukkan Nombor Matrik!');
+
+            try {
+                const res = await fetch(`/api/search/${matrix}`);
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <div style="background:#f0fdf4; border:1px solid #22c55e; padding:15px; border-radius:8px; margin-top:15px;">
+                            <p style="margin:4px 0;"><strong>Nama:</strong> ${data.profile.full_name}</p>
+                            <p style="margin:4px 0;"><strong>No Matrik:</strong> ${data.profile.matrix_no}</p>
+                            <p style="margin:4px 0;"><strong>Kursus:</strong> ${data.profile.course}</p>
+                            <p style="margin:4px 0;"><strong>Institusi:</strong> ${data.profile.institution}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p style="color:red; margin-top:10px;">${data.message || 'Ralat berlaku'}</p>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p style="color:red; margin-top:10px;">Gagal berhubung dengan server.</p>`;
+            }
+        }
+
+        // 2. LOG MASUK
+        async function loginStudent() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const resultDiv = document.getElementById('loginResult');
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <div style="background:#f0fdf4; border:1px solid #22c55e; padding:15px; border-radius:8px; margin-top:15px;">
+                            <h4 style="color:#16a34a; margin:0 0 8px 0;">Log Masuk Berjaya!</h4>
+                            <p style="margin:4px 0;"><strong>Nama:</strong> ${data.student.name}</p>
+                            <p style="margin:4px 0;"><strong>No IC:</strong> ${data.student.ic}</p>
+                            <p style="margin:4px 0;"><strong>Email:</strong> ${data.student.email}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p style="color:red; margin-top:10px;">${data.message || 'Ralat berlaku'}</p>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p style="color:red; margin-top:10px;">Gagal berhubung dengan server.</p>`;
+            }
+        }
+
+        // 3. TUKAR KATA LALUAN
+        async function changePassword() {
+            const email = document.getElementById('updateEmail').value.trim();
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const resultDiv = document.getElementById('updateResult');
+
+            if (!email || !oldPassword || !newPassword) {
+                return alert('Sila lengkapkan semua ruangan!');
+            }
+
+            const res = await fetch('/api/change-password', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, oldPassword, newPassword })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                resultDiv.innerHTML = `
+                    <div style="margin-top:15px; padding:12px; background:#dcfce7; border-left:4px solid #16a34a; border-radius:4px; color:#15803d; font-weight:bold;">
+                        ${data.message}
+                    </div>
+                `;
+                document.getElementById('oldPassword').value = '';
+                document.getElementById('newPassword').value = '';
+            } else {
+                resultDiv.innerHTML = `<p style="color:red; margin-top:10px;">${data.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
