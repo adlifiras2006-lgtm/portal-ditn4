@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Masuk Pelajar | Portal DITN4</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">PORTAL DITN4</div>
+        <div class="nav-links">
+            <a href="index.html">Carian Profil</a>
+            <a href="student_login.html" class="active">Log Masuk Pelajar</a>
+            <a href="lecturer_login.html">Log Masuk Pensyarah</a>
+            <a href="admin_login.html">Log Masuk Admin</a>
+        </div>
+    </nav>
+
+    <div class="container" style="justify-content: center; display: flex;">
+        <!-- Form Log Masuk -->
+        <div id="loginSection" class="card" style="max-width: 450px; width: 100%;">
+            <h2>Log Masuk Pelajar</h2>
+            <form id="studentLoginForm">
+                <div class="form-group">
+                    <label>Email Pelajar:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Kata Laluan:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn">Log Masuk</button>
+            </form>
+            <div id="loginError" class="error-msg"></div>
+        </div>
+
+        <!-- Dashboard Edit Profil (Keluar selepas log masuk) -->
+        <div id="profileSection" class="card" style="max-width: 500px; width: 100%; display: none;">
+            <h2>Kemaskini Profil Pelajar</h2>
+            <form id="updateProfileForm">
+                <div class="form-group">
+                    <label>Nama Pelajar:</label>
+                    <input type="text" id="editNama" disabled>
+                </div>
+                <div class="form-group">
+                    <label>No Matrik:</label>
+                    <input type="text" id="editMatrik" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Jantina:</label>
+                    <select id="editJantina" style="width: 100%; padding: 0.625rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        <option value="">-- Pilih Jantina --</option>
+                        <option value="Lelaki">Lelaki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>URL Gambar Profil (ImgBB/Direct Link):</label>
+                    <input type="text" id="editGambarUrl" placeholder="https://i.ibb.co/...">
+                </div>
+                <button type="submit" class="btn">Simpan Perubahan</button>
+            </form>
+            <div id="updateMsg" style="margin-top: 10px; font-size: 0.9rem;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserMatrik = '';
+
+        document.getElementById('studentLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, role: 'student' })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                currentUserMatrik = data.no_matrik;
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('profileSection').style.display = 'block';
+
+                document.getElementById('editNama').value = data.nama;
+                document.getElementById('editMatrik').value = data.no_matrik;
+                document.getElementById('editJantina').value = data.jantina || '';
+                document.getElementById('editGambarUrl').value = data.gambar_url || '';
+            } else {
+                document.getElementById('loginError').innerText = data.message;
+            }
+        });
+
+        document.getElementById('updateProfileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const jantina = document.getElementById('editJantina').value;
+            const gambar_url = document.getElementById('editGambarUrl').value;
+
+            const res = await fetch('/api/student/update', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ no_matrik: currentUserMatrik, jantina, gambar_url })
+            });
+
+            const data = await res.json();
+            const msgBox = document.getElementById('updateMsg');
+            if (res.ok) {
+                msgBox.style.color = '#16a34a';
+                msgBox.innerText = 'Profil berjaya dikemas kini!';
+            } else {
+                msgBox.style.color = '#dc2626';
+                msgBox.innerText = data.message;
+            }
+        });
+    </script>
+</body>
+</html>

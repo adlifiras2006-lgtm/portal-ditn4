@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Admin | DITN4</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">PORTAL DITN4</div>
+        <div class="nav-links">
+            <a href="index.html">Carian Profil</a>
+            <a href="student_login.html">Log Masuk Pelajar</a>
+            <a href="lecturer_login.html">Log Masuk Pensyarah</a>
+            <a href="admin_login.html" class="active">Log Masuk Admin</a>
+        </div>
+    </nav>
+
+    <div class="container" style="display: flex; justify-content: center; align-items: center; min-height: 60vh;">
+        
+        <!-- Form Log Masuk Admin -->
+        <div id="loginSection" class="card" style="max-width: 400px; width: 100%;">
+            <h2>Log Masuk Pentadbir (Admin)</h2>
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label>ID Admin / Email:</label>
+                    <input type="text" id="adminEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Kata Laluan Admin:</label>
+                    <input type="password" id="adminPassword" required>
+                </div>
+                <button type="submit" class="btn" style="background-color: #0f172a;">Log Masuk Admin</button>
+            </form>
+            <div id="adminError" class="error-msg"></div>
+        </div>
+
+        <!-- Dashboard Panel Admin -->
+        <div id="adminDashboard" class="card" style="max-width: 600px; width: 100%; display: none;">
+            <h2>Panel Kawalan Admin</h2>
+            <p style="margin-bottom: 1rem; color: #475569;">Selamat datang Pentadbir Portal DITN4.</p>
+            
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn" onclick="location.href='lecturer-login.html'">Urus Akses Pensyarah</button>
+                <button class="btn" style="background-color: #dc2626;" onclick="resetSystem()">Reset Sistem</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+
+            // Logik Pengesahan Admin
+            if (email === 'admin@ditn4.edu.my' && password === 'admin123') {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('adminDashboard').style.display = 'block';
+            } else {
+                document.getElementById('adminError').innerText = 'Akses Admin Ditolak: Kredensial tidak sah.';
+            }
+        });
+
+        function resetSystem() {
+            alert('Aksi Reset Sistem memerlukan pengesahan pangkalan data Supabase.');
+        }
+    </script>
+</body>
+</html>

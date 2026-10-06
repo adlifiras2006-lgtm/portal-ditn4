@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Pensyarah | DITN4</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 8px 12px; border: 1px solid #cbd5e1; text-align: left; font-size: 0.85rem; }
+        th { background-color: #f1f5f9; }
+        .action-btn { padding: 4px 8px; font-size: 0.75rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">PORTAL DITN4</div>
+        <div class="nav-links">
+            <a href="index.html">Carian Profil</a>
+            <a href="student_login.html">Log Masuk Pelajar</a>
+            <a href="lecturer_login.html" class="active">Log Masuk Pensyarah</a>
+            <a href="admin_login.html">Log Masuk Admin</a>
+        </div>
+    </nav>
+
+    <div class="container" style="display: flex; justify-content: center; flex-direction: column; align-items: center;">
+        
+        <!-- Form Log Masuk Pensyarah -->
+        <div id="loginSection" class="card" style="max-width: 450px; width: 100%;">
+            <h2>Log Masuk Pensyarah</h2>
+            <form id="lecturerLoginForm">
+                <div class="form-group">
+                    <label>Email Pensyarah:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Kata Laluan:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn">Log Masuk Pensyarah</button>
+            </form>
+            <div id="loginError" class="error-msg"></div>
+        </div>
+
+        <!-- Dashboard Pensyarah (Pengurusan Pelajar) -->
+        <div id="dashboardSection" style="width: 100%; display: none;">
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2>Tambah Pelajar Baharu</h2>
+                <form id="addStudentForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                    <input type="text" id="addMatrik" placeholder="No Matrik" required class="form-group input">
+                    <input type="text" id="addNama" placeholder="Nama Full" required>
+                    <input type="email" id="addEmail" placeholder="Email" required>
+                    <input type="password" id="addPassword" placeholder="Kata Laluan" required>
+                    <select id="addJantina">
+                        <option value="Lelaki">Lelaki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
+                    <input type="text" id="addKursus" placeholder="Kursus" value="DIPLOMA TEKNOLOGI MAKLUMAT">
+                    <input type="text" id="addInstitusi" placeholder="Institusi" value="POLITEKNIK UNGKU OMAR">
+                    <button type="submit" class="btn" style="grid-column: 1 / -1;">+ Tambah Pelajar</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Senarai Semua Pelajar DITN4</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No Matrik</th>
+                                <th>Nama</th>
+                                <th>Jantina</th>
+                                <th>Email</th>
+                                <th>Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById('lecturerLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const res = await fetch('/api/lecturer/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (res.ok) {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'block';
+                loadStudents();
+            } else {
+                const data = await res.json();
+                document.getElementById('loginError').innerText = data.message;
+            }
+        });
+
+        async function loadStudents() {
+            const res = await fetch('/api/lecturer/students');
+            const students = await res.json();
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '';
+
+            students.forEach(s => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${s.no_matrik}</td>
+                        <td>${s.nama}</td>
+                        <td>${s.jantina || '-'}</td>
+                        <td>${s.email}</td>
+                        <td><button class="action-btn" onclick="deleteStudent('${s.no_matrik}')">Padam</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newStudent = {
+                no_matrik: document.getElementById('addMatrik').value,
+                nama: document.getElementById('addNama').value,
+                email: document.getElementById('addEmail').value,
+                password: document.getElementById('addPassword').value,
+                jantina: document.getElementById('addJantina').value,
+                kursus: document.getElementById('addKursus').value,
+                institusi: document.getElementById('addInstitusi').value
+            };
+
+            const res = await fetch('/api/lecturer/add-student', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newStudent)
+            });
+
+            if (res.ok) {
+                alert('Pelajar berjaya ditambah!');
+                loadStudents();
+            }
+        });
+
+        async function deleteStudent(no_matrik) {
+            if (confirm(`Adakah anda pasti untuk memadam pelajar ${no_matrik}?`)) {
+                await fetch(`/api/lecturer/delete-student/${no_matrik}`, { method: 'DELETE' });
+                loadStudents();
+            }
+        }
+    </script>
+</body>
+</html>
